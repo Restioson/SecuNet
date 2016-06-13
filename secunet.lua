@@ -7,7 +7,7 @@
  
  Items enclosed in [] means that they are encrypted.
  
- Pin UUID [SHA256HMAC (Sender/Destination)*  NextUUID NextPin NextMessagePassword NextHMACPassword Message]
+ Pin IV [SHA256HMAC (Sender/Destination)*  NextUUID NextMessagePassword NextHMACPassword Message]
  
  * If implementation = server, then it will be who sent the packet. If implementation = client, then it will be destination for packet
  
@@ -48,9 +48,26 @@ local modem = peripheral.wrap("top")
  
 -- Variables
 local connected = false
-local server = nil
+local server
 local userdata
 local msgs = {}
+local usrname
+local passwd
+
+-- Login
+function login() 
+
+	repeat
+		io.write("Please enter your SecuNet username > ")
+		usrname = io.read()
+
+		io.write("Please enter your SecuNet password > ")
+		passwd = io.read("*")
+	
+	until getUserdata(passwd, usrname) ~= nil
+	
+	userdata = getUserdata(passwd, usrname)
+		
  
 -- Thanks to Lyqyd for this function
 local function split(input)
@@ -63,8 +80,8 @@ local function split(input)
 end
  
 -- Open and decrypt user's login details
-local function getUserdata(password)
-    local userfile = assert(fs.open("disk/secunet/user.dat", "r"))
+local function getUserdata(password, username)
+    local userfile = assert(fs.open(shell.dir() + "/../users/" .. username .. ".dat", "r"))
     local userfileData = userfile.readAll()
     local iv = base64.dec(split(userfileData)[0])
     local cleartextDetails = decrypt(password, base64.dec(split(userfileData)[0]), iv)
@@ -76,8 +93,8 @@ local function getUserdata(password)
 end
  
 -- Encrypt and save user's login details
-local functions saveUserdata(password)
-    local userfile = assert(fs.open("disk/secunet/user.dat", "w"))
+function saveUserdata(password, username)
+    local userfile = assert(fs.open(shell.dir() + "/../users/" .. username .. ".dat", "w"))
     local iv = generateIV()
     local data = base64.enc(iv .. " " .. encrypt(password, textutils.serialize(userdata), iv))
    
@@ -137,11 +154,10 @@ local function splitData(cleartext)
     -- Put into data table
     data["hmac"] = cleartextSplit[0]
     data["sender"] = cleartextSplit[1]
-	data["nextuuid"] = cleartextSplit[2]
-    data["nextpin"] = cleartextSplit[3]
-    data["nextmsgpassword"] = cleartextSplit[4]
-    data["nexthashpasswd"] = cleartextSplit[5]
-    data["message"] = cleartextSplit[6]
+	data["nextpin"] = cleartextSplit[2]
+    data["nextmsgpassword"] = cleartextSplit[3]
+    data["nexthashpasswd"] = cleartextSplit[4]
+    data["message"] = cleartextSplit[5]
    
     return data
  
@@ -298,7 +314,10 @@ function set_server(channel, userdataPassword)
     server = channel
     os.startThread(listenForMessage)
 end
- 
+
+function getUsername()
+	return userdata["username"]
+
 -- Returns 32 bit random string
 local function random256()
     return toString(math.random(10000000, 99999999))..toString(math.random(10000000, 99999999))..toString(math.random(10000000, 99999999))..toString(math.random(10000000, 99999999))
