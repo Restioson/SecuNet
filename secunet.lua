@@ -37,6 +37,9 @@ local function pullEventRaw()
         term.clear()
         term.setCursorPos(1,1)
         io.write("Terminated")
+		exit()
+	
+	return event
    
 end
    
@@ -67,7 +70,7 @@ function login()
 	until getUserdata(passwd, usrname) ~= nil
 	
 	userdata = getUserdata(passwd, usrname)
-		
+end		
  
 -- Thanks to Lyqyd for this function
 local function split(input)
@@ -152,12 +155,12 @@ local function splitData(cleartext)
     local cleartextSplit = split(cleartext)
    
     -- Put into data table
-    data["hmac"] = cleartextSplit[0]
-    data["sender"] = cleartextSplit[1]
-	data["nextpin"] = cleartextSplit[2]
-    data["nextmsgpassword"] = cleartextSplit[3]
-    data["nexthashpasswd"] = cleartextSplit[4]
-    data["message"] = cleartextSplit[5]
+    data["hmac"] = cleartextSplit.pop(0)
+    data["sender"] = cleartextSplit.pop(0)
+	data["nextpin"] = cleartextSplit.pop(0)
+    data["nextmsgpassword"] = cleartextSplit.pop(0)
+    data["nexthashpasswd"] = cleartextSplit.pop(0)
+    data["message"] = table.concat(cleartextSplit)
    
     return data
  
@@ -176,7 +179,7 @@ local function handleData(packet)
         messagesplit.pop(0)
        
         -- Decrypt data
-        local decryptedData = decrypt(userdata["messagepassword"], messagesplit, messagesplit.pop(0))
+        local decryptedData = decrypt(userdata["messagepassword"], base64.dec(messagesplit), messagesplit.pop(0))
        
         -- Split data
         local splitErrorHappened, data = pcall(splitData, decryptedData)
@@ -217,6 +220,8 @@ end
  
 -- "Receive" message (Fetch from msgs table)
 function receive(timeout)
+   
+   assert(connected, "Function out of context")
    
     -- Timer
     local timeout = timeout or nil
@@ -269,7 +274,7 @@ end
 function send(message, destinationip)
  
     -- Check for connection
-    assert(connected, "Not connected to server!")
+    assert(connected, "Function out of context")
    
     -- Create header
     local pin = userdata["pin"]
@@ -283,10 +288,10 @@ function send(message, destinationip)
     -- Add new passwords to pending list
    
     -- Create encrypted message body
-    local messagebody = " " .. encrypt(userdata["msgpassword"], hmac .. " " .. destination .. " " .. nextpin .. " " .. msgpasswd .. " " .. hashpasswd .. " " .. userdata["msgpassword"] ..  message) 
+    local messagebody = " " .. base64.enc(encrypt(userdata["msgpassword"], hmac .. " " .. destination .. " " .. nextpin .. " " .. msgpasswd .. " " .. hashpasswd .. " " .. userdata["msgpassword"] ..  message)) 
    
     -- Concat pin with messagebody
-    local message = pin .. " " .. iv .. " " messagebody
+    local message = pin .. " " .. iv .. " " .. messagebody
    
     -- Transmit to server
     modem.transmit(channel, channel, message)
@@ -299,24 +304,38 @@ function send(message, destinationip)
        
 end
  
--- Open modem, etc
-function set_server(channel, userdataPassword)
+-- Mainloop
+function mainloop(scriptfunction, networkpassword, networkusername)
  
-    -- Check for connection
-    assert(connected==false, "Already connected to server!")
    
     -- Get login details
-    if userdata ~= nil then userdata = getUserdata(userdataPassword) end
-   
+	if networkpassword ~= nil and networkusername ~= nil then
+		
+		if getUserdata(networkpassword, networkusername) ~= nil then
+		
+		else
+			error("Incorrect login details")
+		end
+	
+	else
+		login()
+	end
+		
+	
     -- Connect
     connected = true
     modem.open(channel)
     server = channel
-    os.startThread(listenForMessage)
+	
+	repeat
+		exitedFirst = parallel.waitForAny(listen, scriptfunction)
+	until exitedFirst == 2
+	
 end
 
 function getUsername()
 	return userdata["username"]
+end
 
 -- Returns 32 bit random string
 local function random256()

@@ -1,6 +1,7 @@
 -- Load APIs
-os.loadAPI("disk/secunet/apis/secunet")
 os.loadAPI("disk/secunet/apis/uuid")
+os.loadAPI("disk/secunet/apis/base64")
+os.loadAPI("disk/secunet/apis/aeslua")
 
 -- Variables
 
@@ -11,13 +12,35 @@ local reverseHosts = {} -- Reverse hosts
 
 
 -- Thanks to Lyqyd for this function
-local function string.split(separator)
+local function split(separator)
 	local results = {}
 	for match in string.gmatch(input, "[^ ]+") do
 		table.insert(results, match)
 	end
 	
 	return results
+end
+
+-- Encrypt
+local function encrypt(key, message, iv)
+    aeslua.encrypt(key, message, aeslua.AES256, aeslua.CBCMODE, iv)
+end
+
+-- Generates IV table
+local function generateIV()
+   
+    local index = 1
+    local iv = {}
+   
+    repeat
+   
+    iv[index] = math.random(1, 255)
+    index = index + 1
+   
+    until index == 17
+   
+    return iv
+ 
 end
 
 -- Returns 32 bit random 
@@ -42,6 +65,8 @@ local function generateUser(username, hostnames) -- Hostnames is an array of hos
 	reverseHosts[username] = hostnames
 	usernameByPin[user["pin"]] = username
 	
+	return user
+	
 end
 
 -- Split cleartext data for server
@@ -51,14 +76,14 @@ local function splitDataServer(cleartext)
 	data = {}
 	
 	-- Split cleartext
-	cleartextSplit = string.split(cleartext)
+	cleartextSplit = split(cleartext)
 	
 	-- Put into data table
-	data["hmac"] = cleartextSplit[0]
-	data["destination"] = cleartextSplit[1]
-	data["nextmsgpassword"] = cleartextSplit[2]
-	data["nexthashpasswd"] = cleartextSplit[3]
-	data["message"] = cleartextSplit[4]
+	data["hmac"] = cleartextSplit.pop(0)
+	data["destination"] = cleartextSplit.pop(0)
+	data["nextmsgpassword"] = cleartextSplit.pop(0)
+	data["nexthashpasswd"] = cleartextSplit.pop(0)
+	data["message"] = table.concat(cleartextSplit)
 	
 	return data
 
@@ -87,10 +112,10 @@ local function handleData(packet)
         messagesplit.pop(0)
        
         -- Decrypt data
-        local decryptedData = decrypt(userdata["messagepassword"], messagesplit, messagesplit.pop(0))
+        local decryptedData = decrypt(userdata["messagepassword"], base64.dec(messagesplit), messagesplit.pop(0))
        
         -- Split data
-        local splitErrorHappened, data = pcall(splitData, decryptedData)
+        local splitErrorHappened, data = pcall(splitDataServer, decryptedData)
        
         if errorHappened ~= true then
             error("Invalid packet")
@@ -132,10 +157,10 @@ local function send(message, destinationuser, sender)
 	local iv = generateIV()
    
     -- Create encrypted message body
-    local messagebody = " " .. encrypt(userdata[destinationuser]["msgpassword"], hmac .. " " .. sender .. " " .. nextpin .. " " .. msgpasswd .. " " .. hashpasswd .. " " .. userdata[destinationuser]["msgpassword"] ..  message) 
+    local messagebody = " " .. base64.enc(encrypt(userdata[destinationuser]["msgpassword"], hmac .. " " .. sender .. " " .. nextpin .. " " .. msgpasswd .. " " .. hashpasswd .. " " .. userdata[destinationuser]["msgpassword"] ..  message)) 
    
     -- Concat pin with messagebody
-    local message = pin .. " " .. iv .. " " messagebody
+    local message = pin .. " " .. iv .. " " .. messagebody
    
     -- Transmit to server
     modem.transmit(channel, channel, message)
@@ -148,11 +173,13 @@ local function send(message, destinationuser, sender)
        
 end
 
--- Listen for packets
-while true
-	local event = {os.pullEvent()} -- event[0] = event
-		if event[0] == "modem_message" then -- event[1] = modemside; event[2] = senderchannel; event[3] = replychannel; event[4] = message; event[5] = senderDistance;
-		
+-- Listen for packet (individual)
+local function listen()
+	local modem = peripheral.wrap("top")
+	modem.open(4000)
+	local event = {os.pullEvent} -- event[0] = event --Wait for event
+	if event[0] == "modem_message" then -- event[1] = modemside; event[2] = senderchannel; event[3] = replychannel; event[4] = message; event[5] = senderDistance;
+		print(event[4])
 		local handleDataErrorHappened, data = pcall(handleData, event[4])
 		
 		if handleDataErrorHappened ~=  true then
@@ -161,22 +188,46 @@ while true
 			
 			local usrname = usernameByPin[data["pin"]]
 			
-			userdata["hmacpassword"] = messageData["nexthashpasswd"]
-			userdata["msgpassword"] = messageData["nextmsgpasswd"]
-			userdata["pin"] = messageData["nextpin"]
-				
-			data["destination"] = data["sender"]
+			userdata[usrname]["hmacpassword"] = messageData["nexthashpasswd"]
+			userdata[usrname]["msgpassword"] = messageData["nextmsgpasswd"]
+			userdata[usrname]["pin"] = messageData["nextpin"]
 			
 			lookupErrorHappened, username = pcall(lookup(data["destination"]))
 			
 			if (lookupErrorHappened ~= true) then
 			
-			elseif username ~= nil
-				send()
-				
-			
-			-- TO BE CONTINUED...
-		
-		
-		
-		
+			elseif (username ~= nil) then
+				send(data["message"], data["destination"], usrname)
+			end	
+		end
+	
+	else
+		return event
+	end
+	
+end	
+
+
+-- Shell (runs for 1 cycle)
+local function usrshell()
+	io.write("> ")
+	input = io.read()
+	local usr = generateUser(input, {})
+	print("User generated.")
+	io.write("Enter password: ")
+	local pass = io.read("*")
+	
+	local f = io.open("usr.dat", "w")
+	local iv = generateIV()
+	f.write(base64.enc(iv .. " " .. encrypt(pass, textutils.serialize(usr), iv)))
+	f.close()
+end
+
+-- Main thread
+function main()
+	while true do
+		 parallel.waitForAny(listen, usrshell)
+	end
+end
+
+main()
