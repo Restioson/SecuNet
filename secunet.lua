@@ -94,13 +94,13 @@ local function get_userdata(password)
     local user_file_iv_serialized = table.remove(user_file_data_split, 1)
     
     -- Encrypted user data
-    local dataEncrypted = base64.dec(table.concat(user_file_data_split, " "))
+    local data_encrypted = base64.dec(table.concat(user_file_data_split, " "))
     
     -- Unserialise IV
     local iv = textutils.unserialize(user_file_iv_serialized)
     
     -- Decrypt user data
-    local cleartext_details = decrypt(password, dataEncrypted, iv)
+    local cleartext_details = decrypt(password, data_encrypted, iv)
     
     -- File decrypted with wrong password
     if cleartext_details == nil then return false, nil end
@@ -121,13 +121,15 @@ end
 
 -- Login
 function login() 
-
+    
+    -- Login
     repeat
+    
         io.write("Please enter your SecuNet username > ")
         usrname = io.read()
 
         io.write("Please enter your SecuNet password > ")
-        passwd = io.read("*")
+        passwd = read("*")
     
     until get_userdata(passwd, usrname) ~= nil
     

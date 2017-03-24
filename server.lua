@@ -99,6 +99,26 @@ local function save_userdata(password)
 
 end
 
+-- Save single user to file
+local function save_user_file(password, username)
+    
+    -- Open file
+    local user_file = assert(fs.open(shell.dir() .. "/users/" .. username .. ".dat", "w"))
+    
+    -- Generate iv
+    local iv = generate_iv()
+    
+    -- Format data for writing
+    local data = textutils.serialize(iv) .. "\t" .. base64.enc(encrypt(password, textutils.serialize(userdata[username])), iv)
+    
+    -- Write data
+    user_file.write(data)
+    
+    -- Close file handle
+    user_file.close()
+
+end
+    
 -- Open and decrypt users' login details
 local function get_userdata(password)
     
@@ -341,7 +361,28 @@ local function command_add_user(args)
     
     -- Generate & save user
     userdata[input] = generate_user(username, {username, unpack(args)})
-
+    
+    -- Get whether to save as seperate file
+    repeat
+    
+        io.write("Save as seperate file (Y/N)? ")
+        answer = read().lower()
+        
+        if answer ~= "y" or answer ~= "n" then print("Please answer Y or N") end
+    
+    until answer == "y" or answer == "n"
+    
+    -- Save as seperate file if yes
+    if answer then 
+        
+        -- Save with password
+        io.write("Password for user file > ")
+        save_user_file(read("*"))
+        
+        print("Saved as " .. shell.dir() .. "/users/" .. username .. ".dat")
+    
+    end
+        
 end
 
 -- Removes user
