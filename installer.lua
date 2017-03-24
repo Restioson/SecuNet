@@ -75,7 +75,7 @@ textutils.slowPrint("+-+-+- Installing dependencies -+-+-+")
 
 -- Install AES api for Lua
 textutils.slowPrint("*** Installing Advanced Encryption Standard API ***")
-shell.run("wget https://git.io/aeslua aeslua") -- Written by SquidDev https://github.com/SquidDev-CC/aeslua
+shell.run("wget https://git.io/aeslua disk/secunet/apis/aeslua") -- Written by SquidDev https://github.com/SquidDev-CC/aeslua
 textutils.slowPrint("*** Installation complete ***")
 sleep(0.75)
 term.clear()
@@ -112,7 +112,7 @@ textutils.slowPrint("*** Installation complete ***")
 sleep(0.75)
 term.clear()
 term.setCursorPos(1,1)
-		
+        
 -- Install client API
 textutils.slowPrint("*** Installing Secure Network and Routing API ***")
 shell.run("pastebin get Tz3JwuJG disk/secunet/apis/secunet")
