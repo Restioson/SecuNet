@@ -17,10 +17,10 @@
  
  
 -- Load APIs
-os.loadAPI("/disk/secunet/apis/aeslua")
-os.loadAPI("/disk/secunet/apis/sha")
-os.loadAPI("/disk/secunet/apis/base64")
-os.loadAPI("/disk/secunet/apis/uuid")
+os.loadAPI(shell.dir() .. "/secunet/apis/aeslua")
+os.loadAPI(shell.dir() .. "/secunet/apis/sha")
+os.loadAPI(shell.dir() .. "/secunet/apis/base64")
+os.loadAPI(shell.dir() .. "/secunet/apis/uuid")
  
  
 -- Init modem
@@ -40,7 +40,49 @@ local oldPullEvent = os.pullEvent
 
 -- Program terminated
 local terminated = false
+
+-- Generates IV table
+local function generate_iv()
+   
+    local index = 1
+    local iv = {}
+   
+    repeat
+   
+    iv[index] = math.random(1, 255)
+    index = index + 1
+   
+    until index == 17
+   
+    return table.concat(iv)
  
+end
+
+-- Encrypt
+local function encrypt(key, message, iv)
+    return aeslua.encrypt(key, message, aeslua.AES256, aeslua.CBCMODE, iv)
+end
+ 
+-- Decrypt
+local function decrypt(key, message, iv)
+    return aeslua.decrypt(key, message, aealua.AES256, aeslua.CBCMODE, iv)
+end
+
+-- Returns 256 bit random string
+local function random256()
+    return tostring(math.random(10000000, 99999999))..tostring(math.random(10000000, 99999999))..tostring(math.random(10000000, 99999999))..tostring(math.random(10000000, 99999999))
+end
+
+-- Thanks to Lyqyd for this function
+local function split(input)
+    local results = {}
+    for match in string.gmatch(input, "[^ ]+") do
+        table.insert(results, match)
+    end
+   
+    return results
+end
+
 -- Encrypt and save user's login details
 function save_userdata(password, username)
 
@@ -69,17 +111,32 @@ local function pullEvent()
    
 end
 
--- Returns 256 bit random string
-local function random256()
-    return tostring(math.random(10000000, 99999999))..tostring(math.random(10000000, 99999999))..tostring(math.random(10000000, 99999999))..tostring(math.random(10000000, 99999999))
+-- Split cleartext data
+local function splitData(cleartext)
+   
+    -- Data table
+    local data = {}
+   
+    -- Split cleartext
+    local cleartextSplit = split(cleartext)
+   
+    -- Put into data table
+    data["hmac"] = table.remove(cleartextSplit, 1)
+    data["sender"] = table.remove(cleartextSplit, 1)
+    data["nextpin"] = table.remove(cleartextSplit, 1)
+    data["nextmsgpassword"] = table.remove(cleartextSplit, 1)
+    data["nexthashpasswd"] = table.remove(cleartextSplit, 1)
+    data["message"] = table.concat(cleartextSplit)
+   
+    return data
+ 
 end
 
-
 -- Open and decrypt users' login details
-local function get_userdata(password)
+local function get_userdata(username, password)
     
     -- Check if file exists
-    if fs.exists(shell.dir() .. "/users/server.dat") ~= true then return end
+    if fs.exists(shell.dir() .. "/users/" .. username .. ".dat") ~= true then return end
     
     -- Open user's file
     local user_file = fs.open(shell.dir() .. "/users/" .. username .. ".dat", "r")
@@ -133,74 +190,17 @@ function login()
     
     until get_userdata(passwd, usrname) ~= nil
     
-    userdata = get_userdata(passwd, usrname)
-end     
- 
--- Thanks to Lyqyd for this function
-local function split(input)
-    local results = {}
-    for match in string.gmatch(input, "[^ ]+") do
-        table.insert(results, match)
-    end
-   
-    return results
-end
-   
+    -- Return
+    return username, password
+
+end      
  
 -- Checks hmac against what it should be
 local function check_hmac(hmac, message)
     
     -- Return
-    return hmac == sha.hmac(message, userdata["hmacpassword"])
+    return hmac == sha.hmac(message, userdata["hmacpassword"]):toHex()
    
-end
- 
--- Generates IV table
-local function generate_iv()
-   
-    local index = 1
-    local iv = {}
-   
-    repeat
-   
-    iv[index] = math.random(1, 255)
-    index = index + 1
-   
-    until index == 17
-   
-    return iv
- 
-end
- 
--- Encrypt
-local function encrypt(key, message, iv)
-    return aeslua.encrypt(key, message, aeslua.AES256, aeslua.CBCMODE, iv)
-end
- 
--- Decrypt
-local function decrypt(key, message, iv)
-    return aeslua.decrypt(key, message, aealua.AES256, aeslua.CBCMODE, iv)
-end
- 
--- Split cleartext data
-local function splitData(cleartext)
-   
-    -- Data table
-    local data = {}
-   
-    -- Split cleartext
-    local cleartextSplit = split(cleartext)
-   
-    -- Put into data table
-    data["hmac"] = table.remove(cleartextSplit, 1)
-    data["sender"] = table.remove(cleartextSplit, 1)
-    data["nextpin"] = table.remove(cleartextSplit, 1)
-    data["nextmsgpassword"] = table.remove(cleartextSplit, 1)
-    data["nexthashpasswd"] = table.remove(cleartextSplit, 1)
-    data["message"] = table.concat(cleartextSplit)
-   
-    return data
- 
 end
  
 -- Extracts data from packet
@@ -312,7 +312,7 @@ function send(message, destinationip)
     local nextmsgpasswd = random128()
     local nexthashpasswd = random128()
     local nextpin = uuid.Generate()
-    local hmac = sha.hmac(message, userdata["hmacpassword"])
+    local hmac = sha.hmac(message, userdata["hmacpassword"]):toHex()
     local iv = generate_iv()
 
     -- Create encrypted message body
@@ -332,14 +332,24 @@ function send(message, destinationip)
 end
  
 -- Mainloop
-function mainloop(script_function)
-   
+function mainloop(script_function, username, password)
+
     -- Set pullEvent to new pull event
     os.pullEvent = pullEvent
     
-    -- Prompt user for login
-    login()
-        
+    if username == nil or password == nil then
+    
+        -- Prompt user for login
+        username, password = login()
+    
+    end
+    
+    -- Get userdata
+    local success, userdata_temp = get_userdata(pass, name)
+    
+    -- Check that loading successful
+    if  success then userdata = userdata_temp end
+    
     -- Connect
     connected = true
     modem.open(4000)

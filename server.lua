@@ -1,7 +1,12 @@
+--[[
+Router server for Secure Net
+]]---
+
 -- Load APIs
-os.loadAPI("disk/secunet/apis/uuid")
-os.loadAPI("disk/secunet/apis/base64")
-os.loadAPI("disk/secunet/apis/aeslua")
+os.loadAPI(shell.dir() .. "/secunet/apis/uuid")
+os.loadAPI(shell.dir() .. "/secunet/apis/base64")
+os.loadAPI(shell.dir() .. "/secunet/apis/aeslua")
+os.loadAPI(shell.dir() .. "/secunet/apis/sha")
 
 -- Variables
 local userdata = {} -- Array of usernames as keys with values as table of userdata [HashMap<String, HashMap<String, String>>]
@@ -72,15 +77,12 @@ end
 local function check_hmac(hmac, message, username)
     
     -- Return
-    return hmac == sha.hmac(message, userdata[username]["hmacpassword"])
+    return hmac == sha.hmac(message, userdata[username]["hmacpassword"]):toHex()
    
 end
 
 -- Saves user data
 local function save_userdata(password)
-    
-    -- Check if file exists
-    if fs.exists(shell.dir() .. "/users/server.dat") ~= true then return end
     
     -- Open file
     local user_file = assert(fs.open(shell.dir() .. "/users/server.dat", "w"))
@@ -100,16 +102,16 @@ local function save_userdata(password)
 end
 
 -- Save single user to file
-local function save_user_file(password, username)
+local function save_user_file(username)
     
     -- Open file
-    local user_file = assert(fs.open(shell.dir() .. "/users/" .. username .. ".dat", "w"))
+    local user_file = assert(fs.open("disk/users/" .. username .. ".dat", "w"))
     
     -- Generate iv
     local iv = generate_iv()
     
     -- Format data for writing
-    local data = textutils.serialize(iv) .. "\t" .. base64.enc(encrypt(password, textutils.serialize(userdata[username])), iv)
+    local data = textutils.serialize(iv) .. "\t" .. base64.enc(encrypt("password", textutils.serialize(userdata[username])), iv)
     
     -- Write data
     user_file.write(data)
@@ -117,6 +119,22 @@ local function save_user_file(password, username)
     -- Close file handle
     user_file.close()
 
+end
+
+-- Get size of table including string indexes
+local function table_size(t)
+    
+    -- Size
+    local size = 0
+
+    -- Iterate through table
+    for key, value in pairs(t) do 
+        size = size + 1 
+    end
+    
+    -- Return
+    return size
+    
 end
     
 -- Open and decrypt users' login details
@@ -130,6 +148,9 @@ local function get_userdata(password)
     
     -- Read all data
     local user_file_data = user_file.readAll()
+    
+    -- Close file handle
+    user_file.close()
     
     -- Data split by \t
     local user_file_data_split = split_tab(user_file_data)
@@ -149,14 +170,16 @@ local function get_userdata(password)
     -- File decrypted with wrong password
     if cleartext_details == nil then return false, nil end
     
-    -- Close file handle
-    user_file.close()
-    
     -- Attempt to deserialize data
-    if textutils.unserialize(cleartext_details) == nil then return false, nil end
+    if textutils.unserialize(cleartext_details) == nil then 
+        return false, nil 
+    end
+    
+    -- User data temp table
+    local userdata_temp = textutils.unserialize(cleartext_details)
     
     -- Successfully unserialized data
-    print("Successfully loaded " .. table.getn(userdata) .. " users")
+    print("Successfully loaded " .. table_size(userdata_temp) .. " users")
     
     -- Return
     return true, textutils.unserialize(cleartext_details)
@@ -244,10 +267,10 @@ local function handle_data(packet)
         local decryptedData = decrypt(userdata["messagepassword"], base64.dec(message_split), textutils.unserialize(table.remove(message_split,1)))
        
         -- Split data
-        local sucess, data = pcall(split_data, decryptedData)
+        local success, data = pcall(split_data, decryptedData)
         
         -- Failed splitting data
-        if sucess ~= true then
+        if success ~= true then
         
             return nil
        
@@ -255,10 +278,10 @@ local function handle_data(packet)
         else
            
             -- Check HMAC
-            local sucess, valid = pcall(check_hmac, data["hmac"], data["message"])
+            local success, valid = pcall(check_hmac, data["hmac"], data["message"])
            
             -- Error comparing HMACs
-            if sucess ~= true then
+            if success ~= true then
                 error("Error comparing HMACs!")
             end
             
@@ -285,7 +308,7 @@ local function send(message, destinationip, sender)
     local nextmsgpasswd = random128()
     local nexthashpasswd = random128()
     local nextpin = uuid.Generate()
-    local hmac = sha.hmac(message, userdata[destinationuser]["hmacpassword"])
+    local hmac = sha.hmac(message, userdata[destinationuser]["hmacpassword"]):toHex()
     local iv = generate_iv()
    
     -- Create encrypted message body
@@ -336,7 +359,7 @@ local function listen()
             end
         end
     end
-end 
+end   
 
 --------------------
 -- Shell commands --
@@ -357,31 +380,43 @@ local function command_add_user(args)
     end
     
     -- Username
-    username = table.remove(args, 1)
+    local username = table.remove(args, 1)
+
+    -- Hosts
+    local hosts = {username, unpack(args)}
     
     -- Generate & save user
-    userdata[input] = generate_user(username, {username, unpack(args)})
+    userdata[username] = generate_user(username, hosts)
+    
+    -- Answer of save as seperate file
+    local answer = ""
     
     -- Get whether to save as seperate file
     repeat
-    
-        io.write("Save as seperate file (Y/N)? ")
-        answer = read().lower()
         
-        if answer ~= "y" or answer ~= "n" then print("Please answer Y or N") end
+        io.write("Save as seperate file (Y/N)? ")
+        answer = string.lower(read())
+
+        if answer ~= "y" and answer ~= "n" then print("Please answer Y or N") end
     
     until answer == "y" or answer == "n"
-    
+
     -- Save as seperate file if yes
-    if answer then 
+    if answer == "y" then 
         
-        -- Save with password
-        io.write("Password for user file > ")
-        save_user_file(read("*"))
+        -- Repeat until drive inserted
+        repeat
+            io.write("Please insert drive! Press enter to continue")
+            read()
+        until fs.exists("disk")
         
-        print("Saved as " .. shell.dir() .. "/users/" .. username .. ".dat")
+        save_user_file(username)
+        
+        print("Saved as " .. "disk/users/" .. username .. ".dat with password \"password\"")
     
     end
+    
+    -- Print user
         
 end
 
@@ -401,7 +436,9 @@ local function command_remove_user(args)
     
     -- Remove user
     userdata[args[1]] = nil
-
+    
+end
+    
 -- Quit command
 local function command_quit(args)
     
@@ -410,39 +447,71 @@ local function command_quit(args)
         
     -- Save userdata with password
     save_userdata(read("*"))
+    
+    -- Send terminate event
+    os.queueEvent("terminate")
+
+end
+
+-- Help command
+local function command_server_help(args)
+    
+    -- Print help
+    print("Server help page:")
+    print("- add_user: adds user. Aliases: user_add")
+    print("- remove_user: removes user. Aliases: user_remove")
+    print("- quit: quits server shell. Aliases: none")
+    print(" - server_help: prints this help page. Aliases: help_server")
+    print("All user scripts and CraftOS commands will work as normal")
+    print("WARNING: Cntrl + T will terminate both running programs and the shell")
 
 end
 
 -- Run shell
-local function server_shell()
-    
-    -- Prompt for server password
-    io.write("Enter server password: ")
-    local pass = read("*")
-    
-    -- Shell directory
-    local dir = shell.dir()
-    
+local function server_shell(pass)
+
     -- Commands table
-    local commands = {quit = command_quit, add_user = command_add_user, remove_user = command_remove_user}
+    local commands = {quit = command_quit}
+    commands["add_user"] = command_add_user
+    commands["user_add"] = command_add_user
+    commands["remove_user"] = command_remove_user
+    commands["user_remove"] = command_remove_user
+    commands["server_help"] = command_server_help
+    commands["help_server"] = command_server_help
+    
+    -- Set terminal colour to yellow
+    term.setTextColor(colors.yellow)
+    
+    -- Print version info
+    print("SecuNet server shell v 1.0.0 running under " .. os.version())
+    
+    -- Set terminal colour back to white
+    term.setTextColor(colors.white)
     
     -- Loop
     while true do
-    
+        
+        -- Set terminal colour to green
+        term.setTextColor(colors.green)
+        
         -- Print a prompt to the screen
-        io.write("> ")
+        io.write("user@" .. os.getComputerLabel() .. ":" .. shell.dir() .. "$ ")
+        
+        -- Set terminal colour back to white
+        term.setTextColor(colors.white)
     
         -- Get input
-        input = read()
+        local input = read()
         
         -- Args
-        args = split(input)
-        args.remove(1)
+        local args = split(input)
+        
+        -- Command
+        local command = table.remove(args, 1)
         
         -- Execute command
-        if commands[input] then commands[input](args)
-        elseif shell.run(input)
-        else print("Unknown command: \"" .. split(input[1]).."\"")
+        if commands[command] then commands[command](args)
+        else shell.run(input) end
         
         -- Save userdata
         save_userdata(pass)
@@ -453,6 +522,14 @@ end
 -- Main thread
 function main()
     
+    -- Variables to be returned by pcall of get_userdata
+    local pcall_success = false
+    local success = false
+    local userdata_temp = ""
+    
+    -- Server password
+    local password = ""
+    
     -- Gets server data
     repeat
         
@@ -461,16 +538,22 @@ function main()
         password = read("*")
         
         -- Try to decrypt login data
-        pcall_success, success, userdata = pcall(get_userdata, password)
+        pcall_success, success, userdata_temp = pcall(get_userdata, password)
         
+        -- File doesn't exist: break out of loop
+        if success == nil then success = true end
+
         -- Wrong password
         if success ~= true then print("Error! Wrong password") end
-    
+
     -- Exit loop
     until success == true
-
+    
+    -- Set userdata
+    if userdata_temp ~= nil then userdata = userdata_temp end
+    
     -- Wait for shell to quit
-    parallel.waitForAny(listen, server_shell)
+    parallel.waitForAny(listen, function() server_shell(password) end)
 
 end
 
