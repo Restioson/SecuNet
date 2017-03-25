@@ -37,5 +37,12 @@ end
 secunet.mainloop(my_script)
 ```
 
+# Installation
+To install SecuNet for the client, run `pastebin run 6AuiT33N`. This will start an installer
+
+# Credits
+AES Api by SquidDev: (https://github.com/SquidDev-CC/aeslua)[https://github.com/SquidDev-CC/aeslua]
+
+
 # Usage
-If you intend to use this in your code, please link in the forum post to this page. If you do not intend to publish it, then you do not need to link to this.
+If you intend to use this in your code, please link in the forum post to this page. If you do not intend to publish it, then you do not need to link to this. 
