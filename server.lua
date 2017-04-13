@@ -3,10 +3,10 @@ Router server for Secure Net
 ]]---
 
 -- Load APIs
-os.loadAPI(shell.dir() .. "/secunet/apis/uuid")
-os.loadAPI(shell.dir() .. "/secunet/apis/base64")
-os.loadAPI(shell.dir() .. "/secunet/apis/aeslua")
-os.loadAPI(shell.dir() .. "/secunet/apis/sha")
+os.loadAPI(shell.dir() .. "/apis/uuid")
+os.loadAPI(shell.dir() .. "/apis/base64")
+os.loadAPI(shell.dir() .. "/apis/aeslua")
+os.loadAPI(shell.dir() .. "/apis/sha")
 
 -- Variables
 local userdata = {} -- Array of usernames as keys with values as table of userdata [HashMap<String, HashMap<String, String>>]
@@ -230,10 +230,10 @@ end
 local function split_data(cleartext)
     
     -- Data table
-    data = {}
+    local data = {}
     
     -- Split cleartext
-    cleartextSplit = split(cleartext)
+    local cleartextSplit = split(cleartext)
     
     -- Populate data table
     data["hmac"] = table.remove(cleartextSplit, 1)
@@ -349,7 +349,7 @@ local function listen()
                 userdata[usrname]["msgpassword"] = messageData["nextmsgpasswd"]
                 userdata[usrname]["pin"] = messageData["nextpin"]
                 
-                lookupErrorHappened, username = pcall(lookup(data["destination"]))
+                local lookupErrorHappened, username = pcall(lookup(data["destination"]))
                 
                 if (lookupErrorHappened ~= true) then
                 
