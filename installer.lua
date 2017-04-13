@@ -76,7 +76,7 @@ textutils.slowPrint("+-+-+- Installing dependencies -+-+-+")
 
 -- Install AES api for Lua
 textutils.slowPrint("*** Installing Advanced Encryption Standard API ***")
-shell.run("wget https://git.io/aeslua " .. dir .. "/apis/aeslua") -- Written by SquidDev https://github.com/SquidDev-CC/aeslua
+shell.run("wget https://git.io/aeslua " .. dir .. "/apis/aeslua.lua") -- Written by SquidDev https://github.com/SquidDev-CC/aeslua
 textutils.slowPrint("*** Installation complete ***")
 sleep(0.75)
 term.clear()
@@ -84,7 +84,7 @@ term.setCursorPos(1,1)
 
 -- Install UUID API for lua
 textutils.slowPrint("*** Installing UUID API ***")
-shell.run("pastebin get p14nFkYQ  " .. dir .. "/apis/uuid")
+shell.run("pastebin get p14nFkYQ  " .. dir .. "/apis/uuid.lua")
 textutils.slowPrint("*** Installation complete ***")
 sleep(0.75)
 term.clear()
@@ -92,7 +92,7 @@ term.setCursorPos(1,1)
 
 -- Install SHA2 api for Lua
 textutils.slowPrint("*** Installing Secure Hashing Algorith API ***")
-shell.run("pastebin get 6UV4qfNF " .. dir .. "/apis/sha")
+shell.run("pastebin get 6UV4qfNF " .. dir .. "/apis/sha.lua")
 textutils.slowPrint("*** Installation complete ***")
 sleep(0.75)
 term.clear()
@@ -100,7 +100,7 @@ term.setCursorPos(1,1)
 
 -- Install Base64 api for Lua
 textutils.slowPrint("*** Installing Base 64 encoding API ***")
-shell.run("pastebin get BqqWB5sN " .. dir .. "/apis/base64")
+shell.run("pastebin get BqqWB5sN " .. dir .. "/apis/base64.lua")
 textutils.slowPrint("*** Installation complete ***")
 sleep(0.75)
 term.clear()
@@ -108,7 +108,7 @@ term.setCursorPos(1,1)
         
 -- Install client API
 textutils.slowPrint("*** Installing Secure Network and Routing API ***")
-shell.run("wget https://git.io/vSkXL " .. dir .. "/apis/secunet")
+shell.run("wget https://git.io/vSkXL " .. dir .. "/apis/secunet.lua")
 textutils.slowPrint("*** Installation complete ***")
 sleep(0.75)
 term.clear()

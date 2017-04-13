@@ -3,10 +3,10 @@ Router server for Secure Net
 ]]---
 
 -- Load APIs
-os.loadAPI(shell.dir() .. "/apis/uuid")
-os.loadAPI(shell.dir() .. "/apis/base64")
-os.loadAPI(shell.dir() .. "/apis/aeslua")
-os.loadAPI(shell.dir() .. "/apis/sha")
+os.loadAPI(shell.dir() .. "/apis/uuid.lua")
+os.loadAPI(shell.dir() .. "/apis/base64.lua")
+os.loadAPI(shell.dir() .. "/apis/aeslua.lua")
+os.loadAPI(shell.dir() .. "/apis/sha.lua")
 
 -- Variables
 local userdata = {} -- Array of usernames as keys with values as table of userdata [HashMap<String, HashMap<String, String>>]

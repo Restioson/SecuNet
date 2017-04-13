@@ -17,10 +17,10 @@
  
  
 -- Load APIs
-os.loadAPI(shell.dir() .. "/secunet/apis/aeslua")
-os.loadAPI(shell.dir() .. "/secunet/apis/sha")
-os.loadAPI(shell.dir() .. "/secunet/apis/base64")
-os.loadAPI(shell.dir() .. "/secunet/apis/uuid")
+os.loadAPI(shell.dir() .. "/secunet/apis/aeslua.lua")
+os.loadAPI(shell.dir() .. "/secunet/apis/sha.lua")
+os.loadAPI(shell.dir() .. "/secunet/apis/base64.lua")
+os.loadAPI(shell.dir() .. "/secunet/apis/uuid.lua")
  
  
 -- Init modem
