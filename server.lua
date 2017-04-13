@@ -89,7 +89,13 @@ local function save_userdata(password)
     
     -- Generate iv
     local iv = generate_iv()
-    
+
+    -- Debug
+    print(textutils.serialize(iv))
+    print(encrypt(password, textutils.serialize(userdata)), iv)
+    print(base64.enc(encrypt(password, textutils.serialize(userdata), iv)))
+    print(textutils.serialize(encrypt))
+
     -- Format data for writing
     local data = textutils.serialize(iv) .. "\t".. base64.enc(encrypt(password, textutils.serialize(userdata), iv))
     
