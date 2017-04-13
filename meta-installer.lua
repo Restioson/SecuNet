@@ -1,4 +1,4 @@
--- Installs the installers and the updaters...
+-- Installs the installers and the updaters... getting out of hand
 io.write("Installation directory: ")
 local dir = read()
 io.write("\n")
