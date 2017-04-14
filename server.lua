@@ -3,10 +3,10 @@ Router server for Secure Net
 ]]---
 
 -- Load APIs
-os.loadAPI(shell.dir() .. "/apis/uuid.lua")
-os.loadAPI(shell.dir() .. "/apis/base64.lua")
-os.loadAPI(shell.dir() .. "/apis/aeslua.lua")
-os.loadAPI(shell.dir() .. "/apis/sha.lua")
+os.loadAPI(shell.dir() .. "/apis/uuid")
+os.loadAPI(shell.dir() .. "/apis/base64")
+os.loadAPI(shell.dir() .. "/apis/aeslua")
+os.loadAPI(shell.dir() .. "/apis/sha")
 
 -- Variables
 local userdata = {} -- Array of usernames as keys with values as table of userdata [HashMap<String, HashMap<String, String>>]
@@ -91,12 +91,6 @@ local function save_userdata(password)
     -- Generate iv
     local iv = generate_iv()
 
-    -- Debug
-    print(textutils.serialize(iv))
-    print(encrypt(password, textutils.serialize(userdata)), iv)
-    print(base64.enc(encrypt(password, textutils.serialize(userdata), iv)))
-    print(textutils.serialize(encrypt))
-
     -- Format data for writing
     local data = textutils.serialize(iv) .. "\t".. base64.enc(encrypt(password, textutils.serialize(userdata), iv))
     
@@ -166,13 +160,13 @@ local function get_userdata(password)
     local user_file_iv_serialized = table.remove(user_file_data_split, 1)
     
     -- Encrypted user data
-    local dataEncrypted = base64.dec(table.concat(user_file_data_split, " "))
+    local data_encrypted = base64.dec(table.concat(user_file_data_split, " "))
     
     -- Unserialise IV
     local iv = textutils.unserialize(user_file_iv_serialized)
     
     -- Decrypt user data
-    local cleartext_details = decrypt(password, dataEncrypted, iv)
+    local cleartext_details = decrypt(password, data_encrypted, iv)
     
     -- File decrypted with wrong password
     if cleartext_details == nil then return false, nil end

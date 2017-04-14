@@ -79,7 +79,6 @@ function save_userdata(password, username)
     local user_file = assert(fs.open(shell.dir() + "/../users/" .. username .. ".dat", "w"))
     local iv = generate_iv()
     local data = iv .. " " .. base64.enc(encrypt(password, textutils.serialize(userdata), iv))
-    print()
     user_file.write(data)
     user_file.close()
    
@@ -172,9 +171,6 @@ local function get_userdata(username, password)
     
     -- Attempt to deserialize data
     if textutils.unserialize(cleartext_details) == nil then return false, nil end
-    
-    -- Successfully unserialized data
-    print("Successfully loaded " .. table.getn(userdata) .. " users")
     
     -- Return
     return true, textutils.unserialize(cleartext_details)
