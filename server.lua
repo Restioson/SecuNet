@@ -179,7 +179,7 @@ local function get_userdata(password)
     
     -- Attempt to deserialize data
     if textutils.unserialize(cleartext_details) == nil then 
-        return false, nil 
+        return false, nil
     end
     
     -- User data temp table
@@ -556,7 +556,8 @@ function main()
         pcall_success, success, userdata_temp = pcall(get_userdata, password)
 
         -- Error
-        if not pcall_success then print("Error while getting userdata") end
+        if not pcall_success then print("Error while getting userdata:") end
+        print(success) -- This will now be the error message (somewhat ironically)
 
         -- File doesn't exist: break out of loop
         if success == nil then success = true end
