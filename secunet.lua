@@ -22,24 +22,14 @@ os.loadAPI(shell.dir() .. "/secunet/apis/sha.lua")
 os.loadAPI(shell.dir() .. "/secunet/apis/base64.lua")
 os.loadAPI(shell.dir() .. "/secunet/apis/uuid.lua")
  
- 
--- Init modem
-local modem = peripheral.wrap("top")
- 
 -- Variables
 local connected = false
 local server
 local userdata
-local msgs = {}
-local usrname
-local passwd
-
- 
--- Enable handling of cntrl + t
-local oldPullEvent = os.pullEvent
-
--- Program terminated
-local terminated = false
+local username
+local password
+local channel
+local modem
 
 -- Generates IV table
 local function generate_iv()
@@ -95,21 +85,35 @@ function save_userdata(password, username)
    
 end
 
+-- Old os.pullEvent
+local oldPullEvent = os.pullEvent
+
 -- New pullevent
 local function pullEvent()
-   
+
+    -- Wait for event
     local event = table.pack(os.pullEventRaw())
-   
-    if event[1] == "terminate" and terminated ~= true then
+
+    -- Handle terminate event
+    if event[1] == "terminate" then
+
+        -- Save userdata
         io.write("User details password > ")
         save_userdata(io.read())
-        terminated = true
-        os.queueEvent("terminate")
+
+        -- Reset os.pullEvent
+        os.pullEvent = oldPullEvent
+
+        -- Queue terminate event
+        os.queueEvent(unpack(event))
+
     end
-    
+
+    -- Return event
     return unpack(event, 1, event.n)
-   
+
 end
+
 
 -- Split cleartext data
 local function splitData(cleartext)
@@ -127,7 +131,8 @@ local function splitData(cleartext)
     data["nextmsgpassword"] = table.remove(cleartextSplit, 1)
     data["nexthashpasswd"] = table.remove(cleartextSplit, 1)
     data["message"] = table.concat(cleartextSplit)
-   
+
+    -- Return
     return data
  
 end
@@ -183,10 +188,10 @@ function login()
     repeat
     
         io.write("Please enter your SecuNet username > ")
-        usrname = io.read()
+        local usrname = io.read()
 
         io.write("Please enter your SecuNet password > ")
-        passwd = read("*")
+        local passwd = read("*")
     
     until get_userdata(passwd, usrname) ~= nil
     
@@ -221,7 +226,7 @@ local function handle_data(packet)
         -- Split data
         local splitErrorHappened, data = pcall(splitData, decryptedData)
        
-        if errorHappened ~= true then
+        if splitErrorHappened ~= true then
             error("Invalid packet")
        
         -- Split successful
@@ -267,7 +272,7 @@ function receive()
     while true do
        
         -- Wait for data
-        message_event = {os.pullEvent("secunet_message")}
+        local message_event = {os.pullEvent("secunet_message")}
         
         -- Return message and sender
         return message_event[2], message_event[3]
@@ -309,8 +314,8 @@ function send(message, destinationip)
     -- Create header
     local pin = userdata["pin"]
     local destination = destinationip
-    local nextmsgpasswd = random128()
-    local nexthashpasswd = random128()
+    local nextmsgpasswd = random256()
+    local nexthashpasswd = random256()
     local nextpin = uuid.Generate()
     local hmac = sha.hmac(message, userdata["hmacpassword"]):toHex()
     local iv = generate_iv()
@@ -325,34 +330,33 @@ function send(message, destinationip)
     modem.transmit(channel, channel, message)
    
     -- Save the next passwords and pins
-    userdata["messagepassword"] = nextmspasswd
+    userdata["messagepassword"] = nextmsgpasswd
     userdata["hmacpassword"] = nexthashpasswd
     userdata["pin"] = nextpin
    
 end
  
 -- Mainloop
-function mainloop(script_function, username, password)
+function mainloop(script_function, username, password, port, modem_side)
+
+    -- Set channel
+    channel = port
+
+    -- Get modem
+    if modem_side == nil then modem_side = "top" end
+    local modem = peripheral.wrap(modem_side)
 
     -- Set pullEvent to new pull event
     os.pullEvent = pullEvent
     
-    if username == nil or password == nil then
-    
-        -- Prompt user for login
-        username, password = login()
-    
-    end
-    
     -- Get userdata
-    local success, userdata_temp = get_userdata(pass, name)
-    
-    -- Check that loading successful
-    if  success then userdata = userdata_temp end
-    
+    local success, userdata_temp = get_userdata(password, username)
+    if not success then erorr("Invalid username or password!") end
+    userdata = userdata_temp
+
     -- Connect
     connected = true
-    modem.open(4000)
+    modem.open(channel)
     
     -- Wait for the user's function to exit
     parallel.waitForAny(listenForMessage, script_function)

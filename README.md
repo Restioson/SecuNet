@@ -7,22 +7,10 @@ Secure Network API for Computercraft which uses AES to encrypt messages.
 ## Code example
 ```lua
 -- Load SecuNet api
-local secunet = dofile("path/to/secunet/installation/secunet/apis/secunet.lua")
+os.loadAPI("path/to/secunet/installation/secunet/apis/secunet.lua")
 
 -- This function will run while a background listener process listens for messages
 local function my_script()
-    
-    -- Default network port
-    local port = 4000
-    
-     -- Prompt user for login
-    local username, password = secunet.login()
-    
-    -- Connect to SecuNet router server
-    secunet.connect(username, password, 4000) -- username: Users secunet username. Not necessarily MC username
-                                              -- password: User's secunet password; 
-                                              -- port: port for network packets to be sent to server on.
-                                              -- Should be same as server's port. Default is 4000
     
     -- Send a packet to destination_user
     secunet.send("Hello there!", "destination_user") -- Replace this with their secunet user id
@@ -37,8 +25,21 @@ local function my_script()
     
 end
 
+-- Port
+local port = 4000 -- Default SecuNet port
+
+-- Modem side
+local modem_side = "top" -- SecuNet's default modem side is top
+
+ -- Prompt user for login
+local username, password = secunet.login()
+
 -- Run the listener process while running your script
-secunet.mainloop(my_script)
+secunet.mainloop(my_script, username, password, port, modem_side) -- username: Users secunet username. Not necessarily MC username
+                                                      -- password: User's secunet password
+                                                      -- modem_side: side modem is on
+                                                      -- port: port for network packets to be sent to server on.
+                                                      -- Should be same as server's port. Default is 4000
 ```
 
 # Installation
