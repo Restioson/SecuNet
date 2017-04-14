@@ -12,15 +12,17 @@
  * If implementation = server, then it will be who sent the packet. If implementation = client, then it will be destination for packet
  
  
- 
+
 ]]--
- 
- 
+
+-- CWD of api
+local dir = fs.getDir("secunet") .. "/"
+
 -- Load APIs
-os.loadAPI("aeslua")
-os.loadAPI("sha")
-os.loadAPI("base64")
-os.loadAPI("uuid")
+os.loadAPI(dir .. "aeslua")
+os.loadAPI(dir .. "sha")
+os.loadAPI(dir .. "base64")
+os.loadAPI(dir .. "uuid")
  
 -- Variables
 local connected = false
@@ -76,7 +78,7 @@ end
 -- Encrypt and save user's login details
 function save_userdata(password, username)
 
-    local user_file = assert(fs.open("../users/" .. username .. ".dat", "w"))
+    local user_file = assert(fs.open(dir .. "../users/" .. username .. ".dat", "w"))
     local iv = generate_iv()
     local data = iv .. " " .. base64.enc(encrypt(password, textutils.serialize(userdata), iv))
     user_file.write(data)
@@ -102,6 +104,12 @@ local function pullEvent()
 
         -- Reset os.pullEvent
         os.pullEvent = oldPullEvent
+
+        -- Unload API's
+        os.unloadAPI("aeslua")
+        os.unoadAPI("sha")
+        os.unloadAPI("base64")
+        os.unloadAPI("uuid")
 
         -- Queue terminate event
         os.queueEvent(unpack(event))
@@ -140,10 +148,10 @@ end
 local function get_userdata(username, password)
     
     -- Check if file exists
-    if fs.exists("../users/" .. username .. ".dat") ~= true then return end
+    if fs.exists(dir .. "../users/" .. username .. ".dat") ~= true then return end
     
     -- Open user's file
-    local user_file = fs.open("../users/" .. username .. ".dat", "r")
+    local user_file = fs.open(dir .. "../users/" .. username .. ".dat", "r")
     
     -- Read all data
     local user_file_data = user_file.readAll()
