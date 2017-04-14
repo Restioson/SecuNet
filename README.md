@@ -11,7 +11,9 @@ os.loadAPI("path/to/secunet/installation/secunet/apis/secunet.lua")
 
 -- This function will run while a background listener process listens for messages
 local function my_script()
-    
+
+    -- SecuNet will have logged you in automatically to the server by the time this function is called
+
     -- Send a packet to destination_user
     secunet.send("Hello there!", "destination_user") -- Replace this with their secunet user id
     
@@ -20,8 +22,7 @@ local function my_script()
 
     print("Got packet from " .. sender .. ": \"" .. message .."\"") -- E.g: Got packet from SecunetUser: "Hello!"
     
-    -- Disconnect from the server
-    secunet.disconnect()
+    -- At the end of this function secunet will take care of logging out and tidying up
     
 end
 

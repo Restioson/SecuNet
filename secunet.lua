@@ -17,10 +17,10 @@
  
  
 -- Load APIs
-os.loadAPI(shell.dir() .. "/secunet/apis/aeslua.lua")
-os.loadAPI(shell.dir() .. "/secunet/apis/sha.lua")
-os.loadAPI(shell.dir() .. "/secunet/apis/base64.lua")
-os.loadAPI(shell.dir() .. "/secunet/apis/uuid.lua")
+os.loadAPI(shell.dir() .. "aeslua")
+os.loadAPI(shell.dir() .. "sha")
+os.loadAPI(shell.dir() .. "base64")
+os.loadAPI(shell.dir() .. "uuid.")
  
 -- Variables
 local connected = false
@@ -76,7 +76,7 @@ end
 -- Encrypt and save user's login details
 function save_userdata(password, username)
 
-    local user_file = assert(fs.open(shell.dir() + "/../users/" .. username .. ".dat", "w"))
+    local user_file = assert(fs.open("../users/" .. username .. ".dat", "w"))
     local iv = generate_iv()
     local data = iv .. " " .. base64.enc(encrypt(password, textutils.serialize(userdata), iv))
     user_file.write(data)
