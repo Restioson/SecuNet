@@ -13,6 +13,7 @@ local userdata = {} -- Array of usernames as keys with values as table of userda
 local username_by_pin = {} -- Look up username by pin
 local hosts = {} -- Similar to DNS : Lookup usrname by hostname
 local modem = peripheral.wrap("top") -- Modem
+local channel = 4000 -- TODO enable config
 
 -- Thanks to Lyqyd for this function
 local function split(input)
@@ -303,27 +304,23 @@ local function handle_data(packet)
 end
 
 -- Send message
-local function send(message, destinationip, sender)
- 
-    -- Check for connection
-    assert(connected, "Not connected to server!")
+local function send(message, destination, sender)
    
     -- Create header
-    local pin = userdata["pin"]
-    local destinationuser = destinationip
-    local nextmsgpasswd = random128()
-    local nexthashpasswd = random128()
+    local pin = userdata[destination]["pin"]
+    local nextmsgpasswd = random256()
+    local nexthashpasswd = random256()
     local nextpin = uuid.Generate()
-    local hmac = sha.hmac(message, userdata[destinationuser]["hmacpassword"]):toHex()
+    local hmac = sha.hmac(message, userdata[destination]["hmacpassword"]):toHex()
     local iv = generate_iv()
    
     -- Create encrypted message body
-    local messagebody = " " .. base64.enc(encrypt(userdata[destinationuser]["msgpassword"], hmac .. "" .. sender .. " " .. nextpin .. " " .. msgpasswd .. " " .. hashpasswd .. " " .. userdata[destinationuser]["msgpassword"] ..  message)) 
+    local messagebody = " " .. base64.enc(encrypt(userdata[destination]["msgpassword"], hmac .. "" .. sender .. " " .. nextpin .. " " .. nextmsgpasswd .. " " .. nexthashpasswd .. " " ..  message, iv))
    
     -- Concat pin with messagebody
     local message = pin .. " " .. iv .. " " .. messagebody
    
-    -- Transmit to server
+    -- Transmit to client
     modem.transmit(channel, channel, message)
    
     -- Save the next passwords and pins
@@ -336,32 +333,44 @@ end
 
 -- Listen for packets
 local function listen()
+
+    -- Loop
     while true do
-        os.queueEvent(".")
-        os.pullEvent(".")
-        modem.open(4000)
-        local event = {os.pullEvent()} -- event[1] = event --Wait for event
-        if event[1] == "modem_message" then -- event[2] = modemside; event[3] = senderchannel; event[4] = replychannel; event[5] = message; event[6] = senderDistance;
-            print(event[5])
-            local handle_dataErrorHappened, data = pcall(handle_data, event[5])
-            
-            if handle_dataErrorHappened ~=  true then
-            
-            else
-                
-                local usrname = username_by_pin[data["pin"]]
-                
-                userdata[usrname]["hmacpassword"] = messageData["nexthashpasswd"]
-                userdata[usrname]["msgpassword"] = messageData["nextmsgpasswd"]
-                userdata[usrname]["pin"] = messageData["nextpin"]
-                
-                local lookupErrorHappened, username = pcall(lookup(data["destination"]))
-                
-                if (lookupErrorHappened ~= true) then
-                
-                elseif (username ~= nil) then
-                    send(data["message"], data["destination"], usrname)
-                end 
+
+        -- Open modem
+        modem.open(channel)
+
+        -- Wait for event
+        local event = {os.pullEvent("modem_message")} -- event[1] = event --Wait for event
+
+        -- event[1] = event name; event[2] = modemside; event[3] = senderchannel; event[4] = replychannel; event[5] = message; event[6] = senderDistance;
+
+        -- Handle data
+        local handle_data_success, data = pcall(handle_data, event[5])
+
+        -- Error handling data
+        if handle_data_success == false then
+
+        -- No error handling data
+        else
+
+            -- Username
+            local username = username_by_pin[data["pin"]]
+
+            -- Set new passwords and pins
+            userdata[username]["hmacpassword"] = data["nexthashpasswd"]
+            userdata[username]["msgpassword"] = data["nextmsgpasswd"]
+            userdata[username]["pin"] = data["nextpin"]
+
+            -- Destination lookup
+            local lookup_success, destination = pcall(lookup(data["destination"]))
+
+            -- Lookup error
+            if lookup_success == false then
+
+             -- Send packet to destination
+            elseif destination ~= nil then
+                send(data["message"], destination, username)
             end
         end
     end

@@ -56,6 +56,8 @@ To install SecuNet for the server, you will need to do the following:
 4. Run `wget https://git.io/vSkXq directory/for/server/server.lua`
 5. To run the server, just run `directory/for/server/server.lua
 
+Note: make sure that your modem is on the top of the server computer. I recommend using an ender modem for maximum range
+
 # Credits
 - AES Api by SquidDev: https://github.com/SquidDev-CC/aeslua
 - UUID Api by TurboTuTone: http://www.computercraft.info/forums2/index.php?/topic/13924-uuid-api-universally-unique-identifier/
