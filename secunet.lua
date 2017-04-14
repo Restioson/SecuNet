@@ -140,10 +140,10 @@ end
 local function get_userdata(username, password)
     
     -- Check if file exists
-    if fs.exists("./users/" .. username .. ".dat") ~= true then return end
+    if fs.exists("../users/" .. username .. ".dat") ~= true then return end
     
     -- Open user's file
-    local user_file = fs.open("./users/" .. username .. ".dat", "r")
+    local user_file = fs.open("../users/" .. username .. ".dat", "r")
     
     -- Read all data
     local user_file_data = user_file.readAll()
