@@ -17,10 +17,10 @@
  
  
 -- Load APIs
-os.loadAPI(shell.dir() .. "aeslua")
-os.loadAPI(shell.dir() .. "sha")
-os.loadAPI(shell.dir() .. "base64")
-os.loadAPI(shell.dir() .. "uuid.")
+os.loadAPI("aeslua")
+os.loadAPI("sha")
+os.loadAPI("base64")
+os.loadAPI("uuid")
  
 -- Variables
 local connected = false
