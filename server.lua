@@ -129,7 +129,7 @@ end
 
 -- Get size of table including string indexes
 local function table_size(t)
-    
+
     -- Size
     local size = 0
 
@@ -310,7 +310,7 @@ local function send(message, destinationip, sender)
    
     -- Create header
     local pin = userdata["pin"]
-    local destination = destinationip
+    local destinationuser = destinationip
     local nextmsgpasswd = random128()
     local nexthashpasswd = random128()
     local nextpin = uuid.Generate()
@@ -327,7 +327,7 @@ local function send(message, destinationip, sender)
     modem.transmit(channel, channel, message)
    
     -- Save the next passwords and pins
-    userdata["messagepassword"] = nextmspasswd
+    userdata["messagepassword"] = nextmsgpasswd
     userdata["hmacpassword"] = nexthashpasswd
     userdata["pin"] = nextpin
    
@@ -528,7 +528,7 @@ end
 -- Main thread
 function main()
     
-    -- Variables to be returned by pcall of get_userdata
+    -- Variables to hold values to be returned by pcall of get_userdata
     local pcall_success = false
     local success = false
     local userdata_temp = ""
@@ -545,12 +545,17 @@ function main()
         
         -- Try to decrypt login data
         pcall_success, success, userdata_temp = pcall(get_userdata, password)
-        
+
+        -- Error
+        if not pcall_success then print("Error while getting userdata") end
+
         -- File doesn't exist: break out of loop
         if success == nil then success = true end
 
         -- Wrong password
-        if success ~= true then print("Error! Wrong password") end
+        if not success then print("Error! Wrong password") end
+
+
 
     -- Exit loop
     until success == true
