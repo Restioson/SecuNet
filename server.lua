@@ -86,7 +86,7 @@ end
 local function save_userdata(password)
     
     -- Open file
-    local user_file = assert(fs.open(shell.dir() .. "/users/server.dat", "w"))
+    local user_file = assert(fs.open(shell.dir() .. "/server.dat", "w"))
     
     -- Generate iv
     local iv = generate_iv()
@@ -142,10 +142,10 @@ end
 local function get_userdata(password)
     
     -- Check if file exists
-    if fs.exists(shell.dir() .. "/users/server.dat") ~= true then return end
+    if fs.exists(shell.dir() .. "/server.dat") ~= true then return end
     
     -- Open user's file
-    local user_file = fs.open(shell.dir() .. "/users/server.dat", "r")
+    local user_file = fs.open(shell.dir() .. "/server.dat", "r")
     
     -- Read all data
     local user_file_data = user_file.readAll()
