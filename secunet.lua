@@ -204,6 +204,9 @@ function login(tries)
     -- Tries used
     local counter = 0
 
+    -- Passwd
+    local passwd
+
     -- Login
     while true do
     
@@ -211,10 +214,10 @@ function login(tries)
         local usrname = io.read()
 
         io.write("Please enter your SecuNet password > ")
-        local passwd = read("*")
+        passwd = read("*")
 
         -- Attempt to decrypt user details
-        local success = get_userdata(passwd, usrname)
+        local success = get_userdata(usrname, passwd)
 
         -- Print warning
         if success == "nonexistent" then print("User does not exist!")
@@ -230,7 +233,13 @@ function login(tries)
         if counter >= tries and tries ~= -1 then break end
 
     end
-    
+
+    -- Check if password == password
+    if passwd == "password" then
+        print("Note: it is *strongly* recommended to change your password, as \"password\" is the default.")
+        print("You can change it by typing in a different password when you get prompted for your password when the program exits")
+    end
+
     -- Return
     return username, password
 
