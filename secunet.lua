@@ -158,10 +158,10 @@ end
 local function get_userdata(username, password)
     
     -- Check if file exists
-    if fs.exists(dir .. "../users/" .. username .. ".dat") ~= true then return "nonexistent", nil end
+    if fs.exists(dir .. "/users/" .. username .. ".dat") ~= true then return "nonexistent", nil end
     
     -- Open user's file
-    local user_file = fs.open(dir .. "../users/" .. username .. ".dat", "r")
+    local user_file = fs.open(dir .. "/users/" .. username .. ".dat", "r")
     
     -- Read all data
     local user_file_data = user_file.readAll()
