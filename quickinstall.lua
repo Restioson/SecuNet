@@ -2,6 +2,7 @@
 write("Installation directory > ")
 local dir = read()
 write("\n")
+shell.setDir("")
 shell.run("wget https://git.io/aeslua " .. dir .. "/apis/aeslua")
 shell.run("pastebin get p14nFkYQ  " .. dir .. "/apis/uuid")
 shell.run("pastebin get 6UV4qfNF " .. dir .. "/apis/sha")

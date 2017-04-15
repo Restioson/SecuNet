@@ -1,5 +1,5 @@
 -- Installer
-
+shell.setDir("")
 term.clear()
 term.setCursorPos(1,1)
 
