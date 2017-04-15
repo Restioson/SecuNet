@@ -1,4 +1,5 @@
 -- Installs SecuNet quickly
+local old_dir = shell.getDir()
 write("Installation directory > ")
 local dir = read():gsub(" ","")
 write("\n")
@@ -24,3 +25,4 @@ local secunet_file = fs.open(dir .. "/apis/secunet", "w")
 -- Replace %SECUNET_API_DIR% with installation dir
 secunet_file.write(data:gsub("%%SECUNET_API_DIR%%", dir))
 secunet_file.close()
+shell.setDir(old_dir)

@@ -1,4 +1,5 @@
 -- Updates SecuNet api
+local old_dir = shell.getDir()
 local dir = read():gsub(" ","")
 shell.setDir("")
 shell.run("rm " .. dir .. "/apis/secunet")
@@ -19,3 +20,4 @@ local secunet_file = fs.open(dir .. "/apis/secunet", "w")
 -- Replace %SECUNET_API_DIR% with installation dir
 secunet_file.write(data:gsub("%%SECUNET_API_DIR%%", dir))
 secunet_file.close()
+shell.setDir(old_dir)

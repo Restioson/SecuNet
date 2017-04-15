@@ -1,4 +1,5 @@
 -- Installer
+local old_dir = shell.getDir()
 shell.setDir("")
 term.clear()
 term.setCursorPos(1,1)
@@ -155,3 +156,4 @@ textutils.slowWrite("Thank you for installing Secure Network and Routing API")
 sleep(2)
 term.clear()
 term.setCursorPos(1,1)
+shell.setDir(old_dir)
