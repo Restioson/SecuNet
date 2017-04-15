@@ -68,7 +68,7 @@ end
 -- Thanks to Lyqyd for this function
 local function split(input)
     local results = {}
-    for match in string.gmatch(input, "[^(\t\\;)]+") do -- edit to use arbitrary escape sequency
+    for match in string.gmatch(input, "[^(\t\\;)]+") do -- edit to use arbitrary seperator sequence
         table.insert(results, match)
     end
    
@@ -195,7 +195,7 @@ function login(tries)
     local counter = 0
 
     -- Login
-    repeat
+    while true do
     
         io.write("Please enter your SecuNet username > ")
         local usrname = io.read()
@@ -212,8 +212,14 @@ function login(tries)
 
         -- Increment counter
         counter = counter + 1
-    
-    until success or (counter >= tries and tries == -1)
+
+        -- Check if success decrypting
+        if success == true then break end
+
+        -- Check if tries done
+        if counter >= tries and tries ~= -1 then break end
+
+    end
     
     -- Return
     return username, password
