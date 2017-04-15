@@ -15,7 +15,7 @@
 
 ]]--
 
--- CWD of api
+-- Installation directory of api
 local dir = "%SECUNET_API_DIR%/"
 
 -- Load APIs
@@ -68,17 +68,27 @@ end
 -- Thanks to Lyqyd for this function
 local function split(input)
     local results = {}
-    for match in string.gmatch(input, "[^(\t\\;)]+") do -- edit to use arbitrary seperator sequence
+    for match in string.gmatch(input, "[^ ]+") do
         table.insert(results, match)
     end
    
     return results
 end
 
+-- Thanks to Lyqyd for this function
+local function split_packet(input)
+    local results = {}
+    for match in string.gmatch(input, "[^(\t\\;)]+") do -- edit to use arbitrary seperator sequence
+        table.insert(results, match)
+    end
+
+    return results
+end
+
 -- Encrypt and save user's login details
 function save_userdata(password, username)
 
-    local user_file = assert(fs.open(dir .. "../users/" .. username .. ".dat", "w"))
+    local user_file = assert(fs.open(dir .. "users/" .. username .. ".dat", "w"))
     local iv = generate_iv()
     local data = iv .. " " .. base64.enc(encrypt(password, textutils.serialize(userdata), iv))
     user_file.write(data)
@@ -386,5 +396,14 @@ function mainloop(script_function, username, password, port, modem_side)
     
     -- Wait for the user's function to exit
     parallel.waitForAny(listenForMessage, script_function)
+
+    -- Reset os.pullEvent
+    os.pullEvent = oldPullEvent
+
+    -- Unload API's
+    os.unloadAPI("aeslua")
+    os.unoadAPI("sha")
+    os.unloadAPI("base64")
+    os.unloadAPI("uuid")
     
 end
