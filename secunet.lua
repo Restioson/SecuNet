@@ -16,7 +16,7 @@
 ]]--
 
 -- CWD of api
-local dir = "secunet/apis/"
+local dir = "%SECUNET_API_DIR/%"
 
 -- Load APIs
 os.loadAPI(dir .. "aeslua")
@@ -68,7 +68,7 @@ end
 -- Thanks to Lyqyd for this function
 local function split(input)
     local results = {}
-    for match in string.gmatch(input, "[^ ]+") do
+    for match in string.gmatch(input, "[^(\t\\;)]+") do -- edit to use arbitrary escape sequency
         table.insert(results, match)
     end
    
@@ -137,7 +137,7 @@ local function splitData(cleartext)
     data["nextpin"] = table.remove(cleartextSplit, 1)
     data["nextmsgpassword"] = table.remove(cleartextSplit, 1)
     data["nexthashpasswd"] = table.remove(cleartextSplit, 1)
-    data["message"] = table.concat(cleartextSplit)
+    data["message"] = table.concat(cleartextSplit, " ")
 
     -- Return
     return data
@@ -186,8 +186,14 @@ local function get_userdata(username, password)
 end
 
 -- Login
-function login() 
-    
+function login(tries)
+
+    -- Tries
+    if tries == nil then tries = 1 end
+
+    -- Tries used
+    local counter = 0
+
     -- Login
     repeat
     
@@ -196,8 +202,10 @@ function login()
 
         io.write("Please enter your SecuNet password > ")
         local passwd = read("*")
+
+        counter = counter + 1
     
-    until get_userdata(passwd, usrname) ~= nil
+    until get_userdata(passwd, usrname) ~= nil or (counter > tries and tries ~= -1)
     
     -- Return
     return username, password
@@ -328,7 +336,7 @@ function send(message, destinationip)
     local messagebody = " " .. base64.enc(encrypt(userdata["msgpassword"], hmac .. " " .. destination .. " " .. nextpin .. " " .. msgpasswd .. " " .. hashpasswd .. " " .. userdata["msgpassword"] ..  message)) 
    
     -- Concat pin with messagebody
-    local message = pin .. " " .. textutils.serialize(iv) .. " " .. messagebody
+    local message = pin .. " " .. textutils.serialize(iv):gsub(" ", ""):gsub("\n", "") .. " " .. messagebody
    
     -- Transmit to server
     modem.transmit(channel, channel, message)
@@ -344,7 +352,7 @@ end
 function mainloop(script_function, username, password, port, modem_side)
 
     -- Set channel
-    channel = port
+    if port ~= nil then channel = port else channel = 4000 end
 
     -- Get modem
     if modem_side == nil then modem_side = "top" end

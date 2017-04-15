@@ -5,7 +5,9 @@ term.setCursorPos(1,1)
 
 io.write("[ Secure Network and Routing API by Restioson ]\n")
 sleep(0.75)
-local dir = "secunet"
+write("Installation directory > ")
+local dir = read()
+write("\nNote: if you copy the libraries somewhere else, SecuNet *will not work*. You will need to update the api dir with the updater\n")
 shell.run("mkdir " .. dir)
 
 print("")
@@ -113,6 +115,17 @@ sleep(0.75)
 term.clear()
 term.setCursorPos(1,1)
 
+-- Replace %SECUNET_API_DIR% with installation dir
+
+-- Open file
+local secunet_file = fs.open(dir .. "/apis/secunet")
+
+-- Read data
+local data = secunet_file.read()
+
+-- Replace %SECUNET_API_DIR% with installation dir
+secunet_file.write(data:gsub("%SECUNET_API_DIR%", dir))
+
 textutils.slowPrint("+-+-+- Dependencies successfully installed -+-+-+")
 sleep(2)
 term.clear()
@@ -123,6 +136,7 @@ io.write("[ Secure Network and Routing API by Restioson ]\n")
 textutils.slowPrint("+-+-+- Installing Utilities -+-+-+")
 
 -- Install chat client
+-- TODO install chat client
 
 textutils.slowPrint("+-+-+- Utilities successfully installed -+-+-+")
 

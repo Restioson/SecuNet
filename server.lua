@@ -2,6 +2,9 @@
 Router server for Secure Net
 ]]---
 
+-- API dir
+local dir = "%SECUNET_API_DIR%/"
+
 -- Load APIs
 os.loadAPI("secunet/apis/uuid")
 os.loadAPI("secunet/apis/base64")
@@ -241,7 +244,7 @@ local function split_data(cleartext)
     data["destination"] = table.remove(cleartextSplit, (1))
     data["nextmsgpassword"] = table.remove(cleartextSplit, (1))
     data["nexthashpasswd"] = table.remove(cleartextSplit, (1))
-    data["message"] = table.concat(cleartextSplit)
+    data["message"] = table.concat(cleartextSplit, " ")
     
     return data
 
@@ -312,7 +315,7 @@ local function send(message, destination, sender)
     local messagebody = " " .. base64.enc(encrypt(userdata[destination]["msgpassword"], hmac .. "" .. sender .. " " .. nextpin .. " " .. nextmsgpasswd .. " " .. nexthashpasswd .. " " ..  message, iv))
    
     -- Concat pin with messagebody
-    local message = pin .. " " .. iv .. " " .. messagebody
+    local message = pin .. " " .. textutils.serialize(iv):gsub(" ", ""):gsub("\n", "") .. " " .. messagebody
    
     -- Transmit to client
     modem.transmit(channel, channel, message)

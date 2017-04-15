@@ -33,14 +33,15 @@ local port = 4000 -- Default SecuNet port
 local modem_side = "top" -- SecuNet's default modem side is top
 
  -- Prompt user for login
-local username, password = secunet.login()
+local username, password = secunet.login(-1) -- This arg denotes how many times to try to get correct login
+                                             -- details before giving up. Default is 1 (optional arg)
 
 -- Run the listener process while running your script
 secunet.mainloop(my_script, username, password, port, modem_side) -- username: Users secunet username. Not necessarily MC username
                                                       -- password: User's secunet password
-                                                      -- modem_side: side modem is on
+                                                      -- modem_side: side modem is on. Default = top (optional arg)
                                                       -- port: port for network packets to be sent to server on.
-                                                      -- Should be same as server's port. Default is 4000
+                                                      -- Should be same as server's port. Default is 4000 (optional arg)
 ```
 
 # Installation
