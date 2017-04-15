@@ -1,5 +1,5 @@
 -- Installs SecuNet quickly
-local old_dir = shell.getDir()
+local old_dir = shell.dir()
 write("Installation directory > ")
 local dir = read():gsub(" ","")
 write("\n")

@@ -1,5 +1,5 @@
 -- Installer
-local old_dir = shell.getDir()
+local old_dir = shell.getdir()
 shell.setDir("")
 term.clear()
 term.setCursorPos(1,1)

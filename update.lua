@@ -1,5 +1,5 @@
 -- Updates SecuNet api
-local old_dir = shell.getDir()
+local old_dir = shell.dir()
 local dir = read():gsub(" ","")
 shell.setDir("")
 shell.run("rm " .. dir .. "/apis/secunet")

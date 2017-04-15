@@ -1,5 +1,5 @@
 -- Installs the installers and the updaters... getting out of hand
-local old_dir = shell.getDir()
+local old_dir = shell.dir()
 shell.setDir("")
 io.write("Installation directory: ")
 local dir = read():gsub(" ","")
