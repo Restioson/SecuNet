@@ -16,7 +16,7 @@
 ]]--
 
 -- CWD of api
-local dir = "%SECUNET_API_DIR/%"
+local dir = "%SECUNET_API_DIR%/"
 
 -- Load APIs
 os.loadAPI(dir .. "aeslua")
