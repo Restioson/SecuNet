@@ -128,7 +128,7 @@ secunet_file_read.close()
 local secunet_file = fs.open(dir .. "/apis/secunet", "w")
 
 -- Replace %SECUNET_API_DIR% with installation dir
-secunet_file.write(data:gsub("%SECUNET_API_DIR%", dir))
+secunet_file.write(data:gsub("%%SECUNET_API_DIR%%", dir))
 secunet_file.close()
 
 textutils.slowPrint("+-+-+- Dependencies successfully installed -+-+-+")
