@@ -19,10 +19,10 @@
 local dir = "%SECUNET_API_DIR%/"
 
 -- Load APIs
-os.loadAPI(dir .. "aeslua")
-os.loadAPI(dir .. "sha")
-os.loadAPI(dir .. "base64")
-os.loadAPI(dir .. "uuid")
+os.loadAPI(dir .. "apis/aeslua")
+os.loadAPI(dir .. "apis/sha")
+os.loadAPI(dir .. "apis/base64")
+os.loadAPI(dir .. "apis/uuid")
  
 -- Variables
 local connected = false
