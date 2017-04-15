@@ -89,7 +89,7 @@ end
 local function save_userdata(password)
     
     -- Open file
-    local user_file = assert(fs.open(shell.dir() .. "/server.dat", "w"))
+    local user_file = assert(fs.open(dir .. "/server.dat", "w"))
     
     -- Generate iv
     local iv = generate_iv()
@@ -109,7 +109,7 @@ end
 local function save_user_file(username)
     
     -- Open file
-    local user_file = assert(fs.open("disk/users/" .. username .. ".dat", "w"))
+    local user_file = assert(fs.open(api .. "/users/" .. username .. ".dat", "w"))
     
     -- Generate iv
     local iv = generate_iv()
