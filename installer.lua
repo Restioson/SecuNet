@@ -5,9 +5,8 @@ term.setCursorPos(1,1)
 
 io.write("[ Secure Network and Routing API by Restioson ]\n")
 sleep(0.75)
-textutils.slowPrint("Please input an installation directory: ")
-local dir = read()
-if not fs.exists(dir) then shell.run("mkdir " .. dir) end
+local dir = "secunet"
+shell.run("mkdir " .. dir)
 
 print("")
 term.clear()

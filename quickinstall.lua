@@ -1,7 +1,5 @@
 -- Installs SecuNet quickly
-io.write("Installation directory: ")
-local dir = read()
-io.write("\n")
+local dir = "secunet"
 shell.run("wget https://git.io/aeslua " .. dir .. "/apis/aeslua")
 shell.run("pastebin get p14nFkYQ  " .. dir .. "/apis/uuid")
 shell.run("pastebin get 6UV4qfNF " .. dir .. "/apis/sha")
