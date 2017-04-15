@@ -185,7 +185,7 @@ local function get_userdata(username, password)
 
 end
 
--- Login
+-- Prompt for login
 function login(tries)
 
     -- Tries
@@ -213,7 +213,7 @@ function login(tries)
         -- Increment counter
         counter = counter + 1
     
-    until success or (counter >= tries and tries ~= -1)
+    until success or (counter >= tries and tries == -1)
     
     -- Return
     return username, password
