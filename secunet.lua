@@ -100,7 +100,7 @@ local function pullEvent()
 
         -- Save userdata
         io.write("User details password > ")
-        save_userdata(io.read())
+        save_userdata(io.read("*"))
 
         -- Reset os.pullEvent
         os.pullEvent = oldPullEvent
@@ -148,7 +148,7 @@ end
 local function get_userdata(username, password)
     
     -- Check if file exists
-    if fs.exists(dir .. "../users/" .. username .. ".dat") ~= true then return end
+    if fs.exists(dir .. "../users/" .. username .. ".dat") ~= true then return "nonexistent", nil end
     
     -- Open user's file
     local user_file = fs.open(dir .. "../users/" .. username .. ".dat", "r")
@@ -203,9 +203,17 @@ function login(tries)
         io.write("Please enter your SecuNet password > ")
         local passwd = read("*")
 
+        -- Attempt to decrypt user details
+        local success = get_userdata(passwd, usrname)
+
+        -- Print warning
+        if success == "nonexistent" then print("User does not exist!")
+        else print("Wrong password!") end
+
+        -- Increment counter
         counter = counter + 1
     
-    until get_userdata(passwd, usrname) ~= nil or (counter > tries and tries ~= -1)
+    until success or (counter >= tries and tries ~= -1)
     
     -- Return
     return username, password
