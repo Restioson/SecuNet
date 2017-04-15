@@ -16,7 +16,7 @@
 ]]--
 
 -- CWD of api
-local dir = fs.getDir("secunet") .. "/"
+local dir = "secunet/apis/"
 
 -- Load APIs
 os.loadAPI(dir .. "aeslua")
