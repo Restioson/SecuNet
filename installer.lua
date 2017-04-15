@@ -121,7 +121,7 @@ term.setCursorPos(1,1)
 local secunet_file_read = fs.open(dir .. "/apis/secunet", "r")
 
 -- Read data
-local data = secunet_file_read.read()
+local data = secunet_file_read.readAll()
 secunet_file_read.close()
 
 -- Open file (writing)
