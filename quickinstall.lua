@@ -1,6 +1,6 @@
 -- Installs SecuNet quickly
 write("Installation directory > ")
-local dir = read()
+local dir = read():gsub(" ","")
 write("\n")
 shell.setDir("")
 shell.run("wget https://git.io/aeslua " .. dir .. "/apis/aeslua")

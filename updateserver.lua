@@ -1,5 +1,5 @@
 -- Updates SecuNet server
-local dir = "secunet"
+local dir = read():gsub(" ","")
 shell.setDir("")
 shell.run("rm " .. dir .. "/server.lua")
 shell.run("wget https://git.io/vSkXq " .. dir .. "/server.lua")

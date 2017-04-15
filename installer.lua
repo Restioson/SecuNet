@@ -6,7 +6,7 @@ term.setCursorPos(1,1)
 io.write("[ Secure Network and Routing API by Restioson ]\n")
 sleep(0.75)
 write("Installation directory > ")
-local dir = read()
+local dir = read():gsub(" ","")
 write("\nNote: if you copy the libraries somewhere else, SecuNet *will not work*. You will need to update the api dir with the updater\n")
 shell.run("mkdir " .. dir)
 
