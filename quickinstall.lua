@@ -10,11 +10,16 @@ shell.run("wget https://git.io/vSkXL " .. dir .. "/apis/secunet")
 
 -- Replace %SECUNET_API_DIR% with installation dir
 
--- Open file
-local secunet_file = fs.open(dir .. "/apis/secunet")
+-- Open file (reading)
+local secunet_file_read = fs.open(dir .. "/apis/secunet", "r")
 
 -- Read data
-local data = secunet_file.read()
+local data = secunet_file_read.read()
+secunet_file_read.close()
+
+-- Open file (writing)
+local secunet_file = fs.open(dir .. "/apis/secunet", "w")
 
 -- Replace %SECUNET_API_DIR% with installation dir
 secunet_file.write(data:gsub("%SECUNET_API_DIR%", dir))
+secunet_file.close()
