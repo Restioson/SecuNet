@@ -46,7 +46,7 @@ secunet.mainloop(my_script, username, password, port, modem_side) -- username: U
 
 # Installation
 
-###Client
+## Client
 To install SecuNet for the client, run `wget https://git.io/vSQOy installer.lua` and then `installer.lua`. This will start an installer for the API. Note: it is quite slow as it prints out all of the attributions as well.
 
 ## Server
